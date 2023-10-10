@@ -1,0 +1,17 @@
+Package: wup
+Type: Package
+Title: wup
+Version: 0.1.0
+Author: JARS3N
+Maintainer: JARS3N <JARS3N@GMAIL.COM>
+Description: wetqc upload
+Imports:
+        shiny,
+        RMySQL,
+        XML,
+        DT,
+        dplyr,
+        foam
+License: closed
+Encoding: UTF-8
+LazyData: true
