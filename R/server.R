@@ -84,7 +84,7 @@ server <- function () {
             write.csv(OUT, file, row.names = F)
           })
         observeEvent(input$upload, {
-          # wetqc::upload_all(remove_deselected(DATA,input$foo_rows_selected))
+          # wup::upload_all(remove_deselected(DATA,input$foo_rows_selected))
           AA <<-
             wup::remove_deselected(DATA, input$foo_rows_selected)
           AAA <<- lapply(AA, upload_if_new)
