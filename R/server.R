@@ -14,7 +14,7 @@ server <- function () {
       kill_shiny()
     })
 
-    output$foo <- wetqc::clean_selections()
+    output$foo <- wup::clean_selections()
 
 
 
@@ -28,11 +28,11 @@ server <- function () {
         # process them into foam objects
         procd <- purrr::map(fls, foam::new)
         # process foam objects into dataframe for kraken
-        DATA <- purrr::map(procd, wetqc::format_kraken)
+        DATA <- purrr::map(procd, wup::format_kraken)
         message("data munged")
 
         output$foo2 <- DT::renderDataTable(dplyr::bind_rows(DATA))
-        sum_tbl <- purrr::map_df(procd, wetqc::sum_table_row) %>%
+        sum_tbl <- purrr::map_df(procd, wup::sum_table_row) %>%
           arrange(sn)
 
         if (exists("sum_tbl")) {
@@ -77,7 +77,7 @@ server <- function () {
             paste("data-", Sys.Date(), ".csv", sep = "")
           }, content <- function(file) {
             OUT <- DATA %>%
-              wetqc::remove_deselected(., input$foo_rows_selected) %>%
+              wup::remove_deselected(., input$foo_rows_selected) %>%
               dplyr::bind_rows() %>%
               arrange(., sn, Well)
 
@@ -86,7 +86,7 @@ server <- function () {
         observeEvent(input$upload, {
           # wetqc::upload_all(remove_deselected(DATA,input$foo_rows_selected))
           AA <<-
-            wetqc::remove_deselected(DATA, input$foo_rows_selected)
+            wup::remove_deselected(DATA, input$foo_rows_selected)
           AAA <<- lapply(AA, upload_if_new)
           message("upload sequence completed.")
         })
