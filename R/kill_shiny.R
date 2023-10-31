@@ -1,4 +1,4 @@
 kill_shiny<-function(){
   message("Exiting application.")
-  stopApp(returnValue = invisible())
+  shiny::stopApp(returnValue = invisible())
 }
