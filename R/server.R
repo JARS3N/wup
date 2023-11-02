@@ -91,6 +91,7 @@ server <- function () {
             wup::remove_deselected(DATA, input$foo_rows_selected)
           AAA <<- lapply(AA, upload_if_new)
           message("upload sequence completed.")
+           output$foo <- wup::clean_selections()
         })
       }
     })
