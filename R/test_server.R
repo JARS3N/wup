@@ -1,4 +1,4 @@
-server <- function(input, output, session) {
+server2 <- function(input, output, session) {
   
   # Load required libraries within the server function
   library(shiny)
@@ -67,3 +67,45 @@ server <- function(input, output, session) {
 kill_shiny <- function() {
   stopApp()
 }
+
+ui2 <- function() {
+  shinyUI(fluidPage(  # Use fluidPage for a responsive layout
+    useShinyjs(),  # Initialize shinyjs
+    
+    # Application title
+    titlePanel("Upload WetQC Data"),
+    
+    # Sidebar layout with input and action elements
+    sidebarLayout(
+      sidebarPanel(
+        # File input for wave files
+        fileInput(
+          "goButton",
+          "Select wave files",
+          accept = c(".asyr"),
+          multiple = TRUE,
+          width = "100%"  # Use relative width for responsiveness
+        )
+      ),
+      
+      # Main panel for displaying outputs and action buttons
+      mainPanel(
+        actionButton("Quit", "Exit", icon = icon("times-circle")),
+        downloadButton("exprt", "Download"),
+        actionButton("upload", "Database Upload"),
+        br(),  # Line break for spacing
+        strong("Highlighted runs are not uploaded to the database"),
+        
+        # Tabset panel for different data view options
+        tabsetPanel(
+          tabPanel(
+            "Selection & Validation",
+            DT::dataTableOutput("foo"),
+            actionButton("desel", "Deselect All Rows", icon = icon("undo"))
+          )
+        )
+      )
+    )
+  ))
+}
+
