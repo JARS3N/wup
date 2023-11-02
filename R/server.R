@@ -92,6 +92,9 @@ server <- function () {
           AAA <<- lapply(AA, upload_if_new)
           message("upload sequence completed.")
            output$foo <- wup::clean_selections()
+          DATA<-NULL
+          OUT<-NULL
+          sum_tbl<-NULL
         })
       }
     })
