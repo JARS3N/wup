@@ -1,111 +1,55 @@
-server2 <- function(input, output, session) {
-  
-  # Load required libraries within the server function
+server2 <- function(){
+
+  # Load necessary libraries
   library(shiny)
   library(RMySQL)
   library(XML)
   library(DT)
   library(dplyr)
-  library(purrr)
   library(foam)
+  
+function(input, output, session) {
 
-  # End session
-  session$onSessionEnded(kill_shiny)
 
-  # User initiated quit
-  observeEvent(input$Quit, kill_shiny)
+  # Define a reactive value to store logs
+  log_messages <- reactiveValues(logs = "")
 
-  # Initial output setup
-  output$foo <- wup::clean_selections()
+  # A function to add messages to the log
+  add_log <- function(message) {
+    log_messages$logs <- paste0(log_messages$logs, "\n", Sys.time(), ": ", message)
+  }
+
+  # Function to safely call add_log within reactive contexts
+  safe_log <- function(message) {
+    tryCatch({
+      add_log(message)
+    }, error = function(e) {
+      # handle error gracefully
+    })
+  }
+
+  # Initialize the session
+  session$onSessionEnded(function() {
+    safe_log("Session ended.")
+  })
+
+  observeEvent(input$Quit, {
+    safe_log("Quit button pressed.")
+    stopApp()
+  })
+
+  output$foo <- renderDT({ wup::clean_selections() })
 
   observeEvent(input$goButton, {
-    output$MSG <- renderText("Munging Data...")
-
-    if (length(input$goButton$name) > 0) {
-      fls <- input$goButton$datapath  # Get uploaded file paths
-
-      # Process files into foam objects and then into a dataframe
-      procd <- purrr::map(fls, foam::new)
-      DATA <- purrr::map(procd, wup::format_kraken)
-
-      # Bind the data rows together and display in a table
-      output$foo2 <- DT::renderDataTable(dplyr::bind_rows(DATA))
-      
-      # Create summary table
-      sum_tbl <- create_summary_table(procd)
-
-      # React to row selection in the DT table
-      observeEvent(input$foo_rows_selected, {
-        update_selection_in_sum_table(sum_tbl, input$foo_rows_selected)
-      })
-      
-      # React to deselection
-      observeEvent(input$desel, {
-        reset_selection_in_sum_table(sum_tbl)
-      })
-      
-      # Define export functionality
-      output$exprt <- create_export_handler(DATA, input$foo_rows_selected)
-      
-      # Upload functionality
-      observeEvent(input$upload, {
-        handle_upload(DATA, input$foo_rows_selected)
-        # Clear variables
-        DATA <- NULL
-        sum_tbl <- NULL
-      })
-    } else {
-      output$MSG <- renderText("Please select a directory.")
-    }
+    safe_log("Go button pressed.")
+    # Add more reactive code here...
   })
+
+  # Observe log changes and send to UI
+  output$logs <- renderText({
+    log_messages$logs
+  })
+
+  # ... rest of your server function ...
 }
-
-# Define helper functions here
-# ...
-
-# Define kill_shiny function if it doesn't exist elsewhere
-kill_shiny <- function() {
-  stopApp()
-}
-
-ui2 <- function() {
-  shinyUI(fluidPage(  # Use fluidPage for a responsive layout
-    useShinyjs(),  # Initialize shinyjs
-    
-    # Application title
-    titlePanel("Upload WetQC Data"),
-    
-    # Sidebar layout with input and action elements
-    sidebarLayout(
-      sidebarPanel(
-        # File input for wave files
-        fileInput(
-          "goButton",
-          "Select wave files",
-          accept = c(".asyr"),
-          multiple = TRUE,
-          width = "100%"  # Use relative width for responsiveness
-        )
-      ),
-      
-      # Main panel for displaying outputs and action buttons
-      mainPanel(
-        actionButton("Quit", "Exit", icon = icon("times-circle")),
-        downloadButton("exprt", "Download"),
-        actionButton("upload", "Database Upload"),
-        br(),  # Line break for spacing
-        strong("Highlighted runs are not uploaded to the database"),
-        
-        # Tabset panel for different data view options
-        tabsetPanel(
-          tabPanel(
-            "Selection & Validation",
-            DT::dataTableOutput("foo"),
-            actionButton("desel", "Deselect All Rows", icon = icon("undo"))
-          )
-        )
-      )
-    )
-  ))
-}
-
+  }
