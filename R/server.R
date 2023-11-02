@@ -26,8 +26,10 @@ server <- function () {
         # point to files uploaded to temp directory
         fls <- input$goButton$datapath
         # process them into foam objects
+        message("debug: map foam::new")
         procd <- purrr::map(fls, foam::new)
         # process foam objects into dataframe for kraken
+        message("debug: map foam::new")
         DATA <- purrr::map(procd, wup::format_kraken)
         message("data munged")
 
