@@ -1,5 +1,4 @@
 server2 <- function(){
-
   # Load necessary libraries
   library(shiny)
   library(RMySQL)
@@ -8,57 +7,55 @@ server2 <- function(){
   library(dplyr)
   library(foam)
   
-function(input, output, session) {
+  function(input, output, session) {
+    # Define a reactive value to store logs
+    log_messages <- reactiveValues(logs = "")
 
+    # A function to add messages to the log
+    add_log <- function(message) {
+      log_messages$logs <- paste0(log_messages$logs, "\n", Sys.time(), ": ", message)
+    }
 
-  # Define a reactive value to store logs
-  log_messages <- reactiveValues(logs = "")
+    # Function to safely call add_log within reactive contexts
+    safe_log <- function(message) {
+      tryCatch({
+        add_log(message)
+      }, error = function(e) {
+        # handle error gracefully
+      })
+    }
 
-  # A function to add messages to the log
-  add_log <- function(message) {
-    log_messages$logs <- paste0(log_messages$logs, "\n", Sys.time(), ": ", message)
-  }
-
-  # Function to safely call add_log within reactive contexts
-  safe_log <- function(message) {
-    tryCatch({
-      add_log(message)
-    }, error = function(e) {
-      # handle error gracefully
+    # Initialize the session
+    session$onSessionEnded(function() {
+      safe_log("Session ended.")
     })
-  }
 
-  # Initialize the session
-  session$onSessionEnded(function() {
-    safe_log("Session ended.")
-  })
+    observeEvent(input$Quit, {
+      safe_log("Quit button pressed.")
+      stopApp()
+    })
 
-  observeEvent(input$Quit, {
-    safe_log("Quit button pressed.")
-    stopApp()
-  })
+    output$foo <- renderDT({ wup::clean_selections() })
 
-  output$foo <- renderDT({ wup::clean_selections() })
+    observeEvent(input$goButton, {
+      safe_log("Go button pressed.")
+      # Add more reactive code here...
+    })
 
-  observeEvent(input$goButton, {
-    safe_log("Go button pressed.")
-    # Add more reactive code here...
-  })
+    # Observe log changes and send to UI
+    output$logs <- renderText({
+      log_messages$logs
+    })
 
-  # Observe log changes and send to UI
-  output$logs <- renderText({
-    log_messages$logs
-  })
-session$onSessionEnded(function() {
+    session$onSessionEnded(function() {
       kill_shiny()
     })
+
     observeEvent(input$Quit, {
       kill_shiny()
     })
 
     output$foo <- wup::clean_selections()
-
-
 
     observeEvent(input$goButton, {
       output$MSG <- renderText("Ready")
@@ -83,14 +80,13 @@ session$onSessionEnded(function() {
           sum_tbl$use <- T
           output$foo <- DT::renderDataTable(
             sum_tbl,
-            selection = list(selected = which(sum_tbl$valid ==
-                                                FALSE)),
+            selection = list(selected = which(sum_tbl$valid == FALSE)),
             server = F,
-            options = list(dom = "t",
-                           pageLength = nrow(sum_tbl)),
+            options = list(dom = "t", pageLength = nrow(sum_tbl)),
             rownames = F
           )
         }
+
         observeEvent(input$foo_rows_selected, {
           sum_tbl
           sum_tbl$use <- T
@@ -105,41 +101,43 @@ session$onSessionEnded(function() {
           last <- input$foo_rows_selected
           print(last)
         })
+
         observeEvent(input$desel, {
           sum_tbl$use <- T
-          output$foo <-
-            output$foo <- DT::renderDataTable(
-              sum_tbl,
-              selection = list(selected = NULL),
-              server = F,
-              options = list(dom = "t", pageLength = nrow(sum_tbl)),
-              rownames = FALSE
-            )
+          output$foo <- DT::renderDataTable(
+            sum_tbl,
+            selection = list(selected = NULL),
+            server = F,
+            options = list(dom = "t", pageLength = nrow(sum_tbl)),
+            rownames = FALSE
+          )
         })
-        output$exprt <-
-          downloadHandler(filename <- function() {
+
+        output$exprt <- downloadHandler(
+          filename = function() {
             paste("data-", Sys.Date(), ".csv", sep = "")
-          }, content <- function(file) {
+          }, 
+          content = function(file) {
             OUT <- DATA %>%
               wup::remove_deselected(., input$foo_rows_selected) %>%
               dplyr::bind_rows() %>%
               arrange(., sn, Well)
 
             write.csv(OUT, file, row.names = F)
-          })
+          }
+        )
+
         observeEvent(input$upload, {
           # wup::upload_all(remove_deselected(DATA,input$foo_rows_selected))
-          AA <<-
-            wup::remove_deselected(DATA, input$foo_rows_selected)
+          AA <<- wup::remove_deselected(DATA, input$foo_rows_selected)
           AAA <<- lapply(AA, upload_if_new)
           message("upload sequence completed.")
-           output$foo <- wup::clean_selections()
-          DATA<-NULL
-          OUT<-NULL
-          sum_tbl<-NULL
+          output$foo <- wup::clean_selections()
+          DATA <- NULL
+          OUT <- NULL
+          sum_tbl <- NULL
         })
       }
     })
-  }#)
-}
   }
+}
