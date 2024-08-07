@@ -140,6 +140,6 @@ session$onSessionEnded(function() {
         })
       }
     })
-  })
+  }#)
 }
   }
